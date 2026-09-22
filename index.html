@@ -1,84 +1,46 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827"><title>اسم حيوان نبات جماد بلاد</title>
-<link rel="manifest" href="manifest.json">
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fb;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
-main{max-width:720px;margin:auto;padding:18px}.hero{text-align:center;padding:15px 0}.hero h1{font-size:25px;margin:0 0 7px}.muted{color:#667085;font-size:13px;line-height:1.7}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 8px 28px #1118270a}
-input,button{font:inherit;font-size:16px;border-radius:14px;padding:14px}input{width:100%;border:1px solid #d0d5dd;outline:none}button{border:0;background:#4338ca;color:#fff;font-weight:800;min-height:50px;cursor:pointer}.alt{background:#eef2ff;color:#3730a3}.hidden{display:none!important}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
-.code{text-align:center;font-size:36px;font-weight:900;letter-spacing:6px}.top{display:flex;justify-content:space-between;align-items:center}.letter{width:82px;height:82px;border-radius:24px;background:#111827;color:#fff;display:grid;place-items:center;font-size:43px;font-weight:900}
-.fields{display:grid;gap:10px;margin-top:15px}.field{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center}.field label{font-weight:800}.wide{width:100%;margin-top:14px}
-.score{font-size:13px;color:#667085}.score b{display:block;font-size:25px;color:#172033}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 4px;border-bottom:1px solid #e5e7eb;text-align:center}.judge{padding:6px 8px;min-height:0;font-size:12px;background:#eef2ff;color:#3730a3}
-</style></head><body><main>
-<div class="hero"><h1>اسم • حيوان • نبات • جماد • بلاد</h1><div class="muted">لاعبان — كل لاعب من جواله</div></div>
-
-<section id="home" class="card">
-<input id="name" maxlength="16" placeholder="اسمك">
-<div class="row" style="margin-top:10px"><button onclick="host()">إنشاء غرفة</button><button class="alt" onclick="joinBox.classList.toggle('hidden')">دخول غرفة</button></div>
-<div id="joinBox" class="hidden" style="margin-top:10px"><input id="roomIn" maxlength="6" placeholder="رمز الغرفة"><button class="wide" onclick="join()">دخول</button></div>
-<div id="msg" class="muted"></div>
-</section>
-
-<section id="lobby" class="card hidden">
-<div class="muted">رمز الغرفة</div><div id="roomCode" class="code"></div><div id="players" class="muted">بانتظار اللاعب الثاني…</div>
-<button id="start" class="wide hidden" onclick="newRound()">ابدأ الجولة</button>
-</section>
-
-<section id="game" class="card hidden">
-<div class="top"><div><div class="score">الجولة <b id="round"></b></div><div class="score">الوقت <b id="timer">30</b></div><div class="score">النتيجة <b><span id="score">0</span> - <span id="otherScore">0</span></b><span id="scoreNames"></span></div></div><div id="letter" class="letter"></div></div>
-<div id="fields" class="fields"></div><button id="done" class="wide" onclick="submit()">خلصت</button><div id="wait" class="muted"></div>
-</section>
-
-<section id="review" class="card hidden">
-<h3>نتيجة الجولة</h3><div style="overflow:auto"><table><thead><tr><th>الفئة</th><th>أنت</th><th>الخصم</th><th>نقاطك</th><th>نقاط الخصم</th></tr></thead><tbody id="rows"></tbody></table></div>
-<div id="hostTools" class="hidden"><p class="muted">صاحب الغرفة يراجع صحة الإجابات. اضغط زر صحيح/خطأ عند الحاجة ثم اعتمد النتيجة.</p><button class="wide" onclick="finalize()">اعتماد النتيجة</button></div>
-<div id="guestWait" class="muted hidden">بانتظار صاحب الغرفة لاعتماد النتيجة…</div>
-<button id="next" class="wide hidden" onclick="newRound()">جولة جديدة</button>
-</section>
-
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script>
-const cats=["اسم","حيوان","نبات","جماد","بلاد"], letters=["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"];
-let peer,conn,isHost=false,me="",other="",room="",L="",rnd=0,total=0,otherTotal=0,myAns=null,otherAns=null,valid={},timerInt=null,endsAt=0;
-const $=id=>document.getElementById(id); const joinBox=$("joinBox");
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111827"><title>اسم حيوان نبات جماد بلاد</title><link rel="manifest" href="manifest.json"><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fb;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}main{max-width:820px;margin:auto;padding:18px}.hero{text-align:center;padding:15px 0}.hero h1{font-size:25px;margin:0 0 7px}.muted{color:#667085;font-size:13px;line-height:1.7}.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 8px 28px #1118270a}input,button{font:inherit;font-size:16px;border-radius:14px;padding:14px}input{width:100%;border:1px solid #d0d5dd;outline:none}button{border:0;background:#4338ca;color:#fff;font-weight:800;min-height:50px;cursor:pointer}.alt{background:#eef2ff;color:#3730a3}.hidden{display:none!important}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}.code{text-align:center;font-size:36px;font-weight:900;letter-spacing:6px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}.letter{width:82px;height:82px;border-radius:24px;background:#111827;color:#fff;display:grid;place-items:center;font-size:43px;font-weight:900;flex:none}.fields{display:grid;gap:10px;margin-top:15px}.field{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center}.field label{font-weight:800}.wide{width:100%;margin-top:14px}.score{font-size:13px;color:#667085}.score b{display:block;font-size:25px;color:#172033}.players{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chip{background:#f2f4f7;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:700}.board{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.board th,.board td{padding:9px 6px;border-bottom:1px solid #e5e7eb;text-align:center}.rank{font-weight:900}.reviewWrap{overflow:auto}.answers{min-width:650px}.judge{padding:5px 7px;min-height:0;font-size:11px;background:#eef2ff;color:#3730a3;margin-top:4px}.status{margin-top:10px;text-align:center;font-weight:700}
+</style></head><body><main><div class="hero"><h1>اسم • حيوان • نبات • جماد • بلاد</h1><div class="muted">من لاعبين إلى 6 لاعبين — كل لاعب من جواله</div></div>
+<section id="home" class="card"><input id="name" maxlength="16" placeholder="اسمك"><div class="row" style="margin-top:10px"><button onclick="host()">إنشاء غرفة</button><button class="alt" onclick="joinBox.classList.toggle('hidden')">دخول غرفة</button></div><div id="joinBox" class="hidden" style="margin-top:10px"><input id="roomIn" maxlength="6" placeholder="رمز الغرفة"><button class="wide" onclick="join()">دخول</button></div><div id="msg" class="muted"></div></section>
+<section id="lobby" class="card hidden"><div class="muted">رمز الغرفة</div><div id="roomCode" class="code"></div><div id="players" class="players"></div><div id="lobbyMsg" class="muted status">بانتظار لاعب آخر…</div><button id="start" class="wide hidden" onclick="newRound()">ابدأ الجولة</button></section>
+<section id="game" class="card hidden"><div class="top"><div><div class="score">الجولة <b id="round">1</b></div><div class="score">الوقت <b id="timer">30</b></div></div><div id="letter" class="letter"></div></div><div id="miniBoard"></div><div id="fields" class="fields"></div><button id="done" class="wide" onclick="submit()">خلصت</button><div id="wait" class="muted status"></div></section>
+<section id="review" class="card hidden"><h3 id="reviewTitle">نتيجة الجولة</h3><div id="scoreBoard"></div><div class="reviewWrap"><table class="board answers"><thead id="reviewHead"></thead><tbody id="reviewRows"></tbody></table></div><div id="hostTools" class="hidden"><p class="muted">صاحب الغرفة يراجع الإجابات، ثم يعتمد النتيجة.</p><button class="wide" onclick="finalize()">اعتماد النتيجة</button></div><div id="guestWait" class="muted status hidden">بانتظار صاحب الغرفة لاعتماد النتيجة…</div><button id="next" class="wide hidden" onclick="newRound()">الجولة التالية</button><button id="restart" class="wide hidden" onclick="restartGame()">لعبة جديدة (10 جولات)</button></section>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><script>
+const cats=["اسم","حيوان","نبات","جماد","بلاد"],letters=["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"],MAX=6,TOTAL_ROUNDS=10;
+let peer,isHost=false,me="",myId="",room="",L="",rnd=0,endsAt=0,timerInt=null,roundClosed=false;
+let conns={},hostConn=null,players={},answers={},valid={},roundPoints={},manualPoints={};
+const $=id=>document.getElementById(id),joinBox=$("joinBox");
 function page(id){["home","lobby","game","review"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden")}
 function norm(s){return(s||"").trim().replace(/[إأآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ")}
 function begins(s){return !!(s||"").trim()&&norm(s).startsWith(norm(L))}
-function send(type,data={}){if(conn?.open)conn.send({type,...data})}
 function roomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
-function host(){me=$("name").value.trim();if(!me)return $("msg").textContent="اكتب اسمك.";isHost=true;room=roomCode();$("msg").textContent="جاري إنشاء الغرفة…";peer=new Peer("arabic-categories-"+room);peer.on("open",()=>{$("roomCode").textContent=room;page("lobby")});peer.on("connection",c=>{conn=c;wire()});peer.on("error",()=>{$("msg").textContent="تعذر إنشاء الغرفة. جرّب مرة أخرى."})}
-function join(){me=$("name").value.trim();room=$("roomIn").value.trim().toUpperCase();if(!me||room.length<4)return $("msg").textContent="اكتب الاسم ورمز الغرفة.";isHost=false;peer=new Peer();peer.on("open",()=>{conn=peer.connect("arabic-categories-"+room,{reliable:true});wire()});peer.on("error",()=>$("msg").textContent="تعذر الاتصال.")}
-function wire(){conn.on("open",()=>{send("hello",{name:me});if(!isHost){$("roomCode").textContent=room;page("lobby")}});conn.on("data",m=>{if(m.type==="hello"){other=m.name;$("players").textContent=me+" × "+other;if(isHost)$("start").classList.remove("hidden")}if(m.type==="round"){rnd=m.rnd;L=m.L;endsAt=m.endsAt;reset();page("game");startTimer()}if(m.type==="answers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="stopRound"){otherAns=m.a;stopByOther(m)}if(m.type==="stoppedAnswers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="review"){otherAns=m.hostAnswers;valid=m.valid;render(false);page("review");$("guestWait").classList.remove("hidden")}if(m.type==="final"){total=m.myTotal;otherTotal=m.otherTotal;valid=m.valid;render(false);$("guestWait").classList.add("hidden");updateScores()}});conn.on("close",()=>alert("انقطع اتصال اللاعب الآخر."))}
-function newRound(){if(!isHost)return;rnd++;L=letters[Math.floor(Math.random()*letters.length)];endsAt=Date.now()+30000;send("round",{rnd,L,endsAt});reset();page("game");startTimer()}
-function reset(){clearInterval(timerInt);myAns=otherAns=null;valid={};$("round").textContent=rnd;$("letter").textContent=L;updateScores();$("timer").textContent="30";$("fields").innerHTML=cats.map(c=>`<div class="field"><label>${c}</label><input data-c="${c}" autocomplete="off" autocorrect="off"></div>`).join("");$("done").disabled=false;$("wait").textContent="";$("next").classList.add("hidden");$("hostTools").classList.add("hidden");$("guestWait").classList.add("hidden")}
-
-function updateScores(){$("score").textContent=total;$("otherScore").textContent=otherTotal;$("scoreNames").textContent=`${me} - ${other||"اللاعب الثاني"}`}
-function startTimer(){
- clearInterval(timerInt);
- const tick=()=>{let left=Math.max(0,Math.ceil((endsAt-Date.now())/1000));$("timer").textContent=left;if(left<=0){clearInterval(timerInt);if(isHost&&!myAns){myAns=captureAnswers();$("wait").textContent="انتهى الوقت — تم إيقاف الجولة.";send("stopRound",{by:"انتهاء الوقت",a:myAns});if(otherAns)prepare();}}};
- tick();timerInt=setInterval(tick,250);
-}
+function safe(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function broadcast(m,except=""){Object.entries(conns).forEach(([id,c])=>{if(id!==except&&c.open)c.send(m)})}
+function sendHost(m){if(hostConn?.open)hostConn.send(m)}
+function roster(){return Object.values(players).sort((a,b)=>a.join-b.join)}
+function host(){me=$("name").value.trim();if(!me)return $("msg").textContent="اكتب اسمك.";isHost=true;room=roomCode();$("msg").textContent="جاري إنشاء الغرفة…";peer=new Peer("arabic-categories-"+room);peer.on("open",id=>{myId=id;players[id]={id,name:me,total:0,join:0};$("roomCode").textContent=room;renderLobby();page("lobby")});peer.on("connection",acceptConn);peer.on("error",()=>$("msg").textContent="تعذر إنشاء الغرفة. جرّب مرة أخرى.")}
+function acceptConn(c){if(Object.keys(players).length>=MAX){c.on("open",()=>c.send({type:"full"}));setTimeout(()=>c.close(),500);return}conns[c.peer]=c;c.on("data",m=>hostData(c,m));c.on("close",()=>{delete conns[c.peer];if(players[c.peer]){delete players[c.peer];syncRoster()}})}
+function join(){me=$("name").value.trim();room=$("roomIn").value.trim().toUpperCase();if(!me||room.length<4)return $("msg").textContent="اكتب الاسم ورمز الغرفة.";isHost=false;peer=new Peer();peer.on("open",id=>{myId=id;hostConn=peer.connect("arabic-categories-"+room,{reliable:true});hostConn.on("open",()=>{hostConn.send({type:"hello",name:me});$("roomCode").textContent=room;page("lobby")});hostConn.on("data",guestData);hostConn.on("close",()=>alert("انقطع اتصال صاحب الغرفة."))});peer.on("error",()=>$("msg").textContent="تعذر الاتصال بالغرفة.")}
+function hostData(c,m){if(m.type==="hello"){players[c.peer]={id:c.peer,name:(m.name||"لاعب").slice(0,16),total:0,join:Date.now()+Math.random()};syncRoster()}else if(m.type==="finish"&&!roundClosed){answers[c.peer]=m.a;closeRound(c.peer)}else if(m.type==="stopped"){answers[c.peer]=m.a;checkAnswers()} }
+function guestData(m){if(m.type==="full"){alert("الغرفة مكتملة (6 لاعبين).");location.reload()}else if(m.type==="roster"){players=m.players;renderLobby();renderMiniBoard()}else if(m.type==="round"){rnd=m.rnd;L=m.L;endsAt=m.endsAt;startRoundUI()}else if(m.type==="stop"){if(!roundClosed){roundClosed=true;clearInterval(timerInt);let a=captureAnswers();sendHost({type:"stopped",a});$("wait").textContent=m.reason==="time"?"انتهى الوقت — توقفت الجولة.":`${m.name} ضغط «خلصت» — توقفت الجولة.`}}else if(m.type==="review"){answers=m.answers;valid=m.valid;roundPoints=calcPoints();renderReview(false);page("review");$("guestWait").classList.remove("hidden")}else if(m.type==="final"){players=m.players;answers=m.answers;valid=m.valid;roundPoints=m.roundPoints;renderReview(false);$("guestWait").classList.add("hidden");renderScoreBoard();renderMiniBoard();if(m.gameOver)showGameOver(false)}}
+function syncRoster(){broadcast({type:"roster",players});renderLobby();renderMiniBoard()}
+function renderLobby(){let list=roster();$("players").innerHTML=list.map(p=>`<span class="chip">${safe(p.name)}</span>`).join("");$("lobbyMsg").textContent=`${list.length} / ${MAX} لاعبين`+(list.length<2?" — بانتظار لاعب آخر…":"");if(isHost)$("start").classList.toggle("hidden",list.length<2)}
+function newRound(){if(!isHost||roster().length<2||rnd>=TOTAL_ROUNDS)return;rnd++;L=letters[Math.floor(Math.random()*letters.length)];endsAt=Date.now()+30000;answers={};valid={};roundPoints={};manualPoints={};roundClosed=false;broadcast({type:"round",rnd,L,endsAt});startRoundUI()}
+function startRoundUI(){roundClosed=false;answers={};valid={};roundPoints={};manualPoints={};$("round").textContent=rnd+" / "+TOTAL_ROUNDS;$("letter").textContent=L;$("timer").textContent="30";$("fields").innerHTML=cats.map(c=>`<div class="field"><label>${c}</label><input data-c="${c}" autocomplete="off" autocorrect="off"></div>`).join("");$("done").disabled=false;$("wait").textContent="";$("next").classList.add("hidden");$("restart").classList.add("hidden");$("reviewTitle").textContent="نتيجة الجولة";$("hostTools").classList.add("hidden");$("guestWait").classList.add("hidden");renderMiniBoard();page("game");startTimer()}
+function startTimer(){clearInterval(timerInt);const tick=()=>{let left=Math.max(0,Math.ceil((endsAt-Date.now())/1000));$("timer").textContent=left;if(left<=0){clearInterval(timerInt);if(isHost&&!roundClosed)closeRound("TIME")}};tick();timerInt=setInterval(tick,200)}
 function captureAnswers(){let a={};document.querySelectorAll("[data-c]").forEach(i=>{a[i.dataset.c]=i.value.trim();i.disabled=true});$("done").disabled=true;return a}
-function submit(){
- if(myAns)return; clearInterval(timerInt);
- myAns=captureAnswers();
- $("wait").textContent="أنهيت أولًا — تم إيقاف الجولة عند اللاعب الآخر.";
- send("stopRound",{by:me,a:myAns});
- if(isHost&&otherAns)prepare();
-}
-function stopByOther(m){
- if(myAns)return; clearInterval(timerInt);
- myAns=captureAnswers();
- $("wait").textContent=m.by==="انتهاء الوقت"?"انتهى الوقت — تم إيقاف الجولة.":`انتهت الجولة — ${m.by} ضغط «خلصت» أولًا.`;
- send("stoppedAnswers",{a:myAns});
- if(isHost){otherAns=m.a;prepare();}
-}
-function prepare(){cats.forEach(c=>valid[c]={me:begins(myAns[c]),other:begins(otherAns[c])});send("review",{hostAnswers:myAns,valid:Object.fromEntries(cats.map(c=>[c,{me:valid[c].other,other:valid[c].me}]))});render(true);page("review");$("hostTools").classList.remove("hidden")}
-function points(a,b,va,vb){if(!va)return 0;return vb&&norm(a)===norm(b)?5:10}
-function render(hostMode){let r="";cats.forEach(c=>{let a=myAns?.[c]||"",b=otherAns?.[c]||"",va=valid[c]?.me??begins(a),vb=valid[c]?.other??begins(b),p=points(a,b,va,vb),op=points(b,a,vb,va);r+=`<tr><td>${c}</td><td>${a||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','me')">${va?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${b||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','other')">${vb?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${p}</td><td>${op}</td></tr>`});$("rows").innerHTML=r}
-function flip(c,w){valid[c][w]=!valid[c][w];render(true);$("hostTools").classList.remove("hidden")}
-function finalize(){let mine=0,theirs=0;cats.forEach(c=>{mine+=points(myAns[c],otherAns[c],valid[c].me,valid[c].other);theirs+=points(otherAns[c],myAns[c],valid[c].other,valid[c].me)});total+=mine;otherTotal+=theirs;send("final",{myTotal:otherTotal,otherTotal:total,valid:Object.fromEntries(cats.map(c=>[c,{me:valid[c].other,other:valid[c].me}]))});updateScores();$("hostTools").classList.add("hidden");$("next").classList.remove("hidden");render(false)}
+function submit(){if(roundClosed)return;clearInterval(timerInt);let a=captureAnswers();if(isHost){answers[myId]=a;closeRound(myId)}else{roundClosed=true;sendHost({type:"finish",a});$("wait").textContent="تم — جاري إيقاف الجولة عند الجميع…"}}
+function closeRound(who){if(roundClosed)return;roundClosed=true;clearInterval(timerInt);if(!answers[myId])answers[myId]=captureAnswers();let time=who==="TIME",name=time?"":(players[who]?.name||me);broadcast({type:"stop",reason:time?"time":"done",name});$("wait").textContent=time?"انتهى الوقت — توقفت الجولة.":`${name} ضغط «خلصت» — توقفت الجولة.`;checkAnswers()}
+function checkAnswers(){if(!isHost)return;let ids=roster().map(p=>p.id);if(ids.every(id=>answers[id]))prepare()}
+function prepare(){valid={};roster().forEach(p=>{valid[p.id]={};cats.forEach(c=>valid[p.id][c]=begins(answers[p.id]?.[c]))});roundPoints=calcPoints();broadcast({type:"review",answers,valid});renderReview(true);page("review");$("hostTools").classList.remove("hidden")}
+function catPoints(id,c){if(manualPoints[id]?.[c]!==undefined)return manualPoints[id][c];if(!valid[id]?.[c])return 0;let a=norm(answers[id]?.[c]);let duplicate=roster().some(p=>p.id!==id&&valid[p.id]?.[c]&&norm(answers[p.id]?.[c])===a);return duplicate?5:10}
+function calcPoints(){let out={};roster().forEach(p=>{out[p.id]=0;cats.forEach(c=>out[p.id]+=catPoints(p.id,c))});return out}
+function renderReview(hostMode){let list=roster();$("reviewHead").innerHTML=`<tr><th>الفئة</th>${list.map(p=>`<th>${safe(p.name)}</th>`).join("")}</tr>`;$("reviewRows").innerHTML=cats.map(c=>`<tr><td><b>${c}</b></td>${list.map(p=>{let a=answers[p.id]?.[c]||"",pts=catPoints(p.id,c);return `<td>${safe(a)||"—"}<br><b>${pts} نقاط</b>${hostMode?`<br><div class="row" style="gap:4px;margin-top:4px"><button class="judge" onclick="setPts('${p.id}','${c}',10)">10</button><button class="judge" onclick="setPts('${p.id}','${c}',5)">5</button><button class="judge" onclick="setPts('${p.id}','${c}',0)">0</button></div>`:""}</td>`}).join("")}</tr>`).join("");renderScoreBoard()}
+function setPts(id,c,n){manualPoints[id]??={};manualPoints[id][c]=n;valid[id]??={};valid[id][c]=n>0;roundPoints=calcPoints();renderReview(true);$("hostTools").classList.remove("hidden")}
+function finalize(){roundPoints=calcPoints();roster().forEach(p=>players[p.id].total=(players[p.id].total||0)+(roundPoints[p.id]||0));let gameOver=rnd>=TOTAL_ROUNDS;broadcast({type:"final",players,answers,valid,roundPoints,gameOver});renderReview(false);renderScoreBoard();$("hostTools").classList.add("hidden");if(gameOver)showGameOver(true);else $("next").classList.remove("hidden");syncRoster()}
+function showGameOver(hostMode){$("reviewTitle").textContent="النتيجة النهائية بعد 10 جولات";$("next").classList.add("hidden");$("guestWait").classList.add("hidden");if(hostMode)$("restart").classList.remove("hidden");renderScoreBoard()}
+function restartGame(){if(!isHost)return;rnd=0;roster().forEach(p=>players[p.id].total=0);answers={};valid={};roundPoints={};manualPoints={};$("restart").classList.add("hidden");$("reviewTitle").textContent="نتيجة الجولة";syncRoster();newRound()}
+function sortedScores(){return roster().slice().sort((a,b)=>(b.total||0)-(a.total||0)||a.join-b.join)}
+function renderScoreBoard(){let list=sortedScores();$("scoreBoard").innerHTML=`<table class="board"><thead><tr><th>الترتيب</th><th>اللاعب</th><th>الجولة</th><th>المجموع</th></tr></thead><tbody>${list.map((p,i)=>`<tr><td class="rank">${i+1}</td><td>${safe(p.name)}</td><td>${roundPoints[p.id]??0}</td><td><b>${p.total||0}</b></td></tr>`).join("")}</tbody></table>`}
+function renderMiniBoard(){let el=$("miniBoard");if(!el)return;let list=sortedScores();el.innerHTML=list.length?`<table class="board"><thead><tr><th>اللاعب</th><th>المجموع</th></tr></thead><tbody>${list.map(p=>`<tr><td>${safe(p.name)}</td><td><b>${p.total||0}</b></td></tr>`).join("")}</tbody></table>`:""}
 </script></main></body></html>
