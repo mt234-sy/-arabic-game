@@ -1,0 +1,8 @@
+{
+  "name": "اسم حيوان نبات جماد بلاد",
+  "short_name": "اسم حيوان",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#111827"
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><title>اسم حيوان نبات جماد بلاد</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fb;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}.hero{text-align:center;padding:15px 0}.hero h1{font-size:25px;margin:0 0 7px}.muted{color:#667085;font-size:13px;line-height:1.7}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 8px 28px #1118270a}
+input,button{font:inherit;font-size:16px;border-radius:14px;padding:14px}input{width:100%;border:1px solid #d0d5dd;outline:none}button{border:0;background:#4338ca;color:#fff;font-weight:800;min-height:50px;cursor:pointer}.alt{background:#eef2ff;color:#3730a3}.hidden{display:none!important}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+.code{text-align:center;font-size:36px;font-weight:900;letter-spacing:6px}.top{display:flex;justify-content:space-between;align-items:center}.letter{width:82px;height:82px;border-radius:24px;background:#111827;color:#fff;display:grid;place-items:center;font-size:43px;font-weight:900}
+.fields{display:grid;gap:10px;margin-top:15px}.field{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center}.field label{font-weight:800}.wide{width:100%;margin-top:14px}
+.score{font-size:13px;color:#667085}.score b{display:block;font-size:25px;color:#172033}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 4px;border-bottom:1px solid #e5e7eb;text-align:center}.judge{padding:6px 8px;min-height:0;font-size:12px;background:#eef2ff;color:#3730a3}
+</style></head><body><main>
+<div class="hero"><h1>اسم • حيوان • نبات • جماد • بلاد</h1><div class="muted">لاعبان — كل لاعب من جواله</div></div>
+
+<section id="home" class="card">
+<input id="name" maxlength="16" placeholder="اسمك">
+<div class="row" style="margin-top:10px"><button onclick="host()">إنشاء غرفة</button><button class="alt" onclick="joinBox.classList.toggle('hidden')">دخول غرفة</button></div>
+<div id="joinBox" class="hidden" style="margin-top:10px"><input id="roomIn" maxlength="6" placeholder="رمز الغرفة"><button class="wide" onclick="join()">دخول</button></div>
+<div id="msg" class="muted"></div>
+</section>
+
+<section id="lobby" class="card hidden">
+<div class="muted">رمز الغرفة</div><div id="roomCode" class="code"></div><div id="players" class="muted">بانتظار اللاعب الثاني…</div>
+<button id="start" class="wide hidden" onclick="newRound()">ابدأ الجولة</button>
+</section>
+
+<section id="game" class="card hidden">
+<div class="top"><div><div class="score">الجولة <b id="round"></b></div><div class="score">مجموعك <b id="score">0</b></div></div><div id="letter" class="letter"></div></div>
+<div id="fields" class="fields"></div><button id="done" class="wide" onclick="submit()">خلصت</button><div id="wait" class="muted"></div>
+</section>
+
+<section id="review" class="card hidden">
+<h3>نتيجة الجولة</h3><div style="overflow:auto"><table><thead><tr><th>الفئة</th><th>أنت</th><th>الخصم</th><th>نقاطك</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div id="hostTools" class="hidden"><p class="muted">صاحب الغرفة يراجع صحة الإجابات. اضغط زر صحيح/خطأ عند الحاجة ثم اعتمد النتيجة.</p><button class="wide" onclick="finalize()">اعتماد النتيجة</button></div>
+<div id="guestWait" class="muted hidden">بانتظار صاحب الغرفة لاعتماد النتيجة…</div>
+<button id="next" class="wide hidden" onclick="newRound()">جولة جديدة</button>
+</section>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const cats=["اسم","حيوان","نبات","جماد","بلاد"], letters=["أ","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش","ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"];
+let peer,conn,isHost=false,me="",other="",room="",L="",rnd=0,total=0,otherTotal=0,myAns=null,otherAns=null,valid={};
+const $=id=>document.getElementById(id); const joinBox=$("joinBox");
+function page(id){["home","lobby","game","review"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden")}
+function norm(s){return(s||"").trim().replace(/[إأآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ")}
+function begins(s){return !!(s||"").trim()&&norm(s).startsWith(norm(L))}
+function send(type,data={}){if(conn?.open)conn.send({type,...data})}
+function roomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+function host(){me=$("name").value.trim();if(!me)return $("msg").textContent="اكتب اسمك.";isHost=true;room=roomCode();$("msg").textContent="جاري إنشاء الغرفة…";peer=new Peer("arabic-categories-"+room);peer.on("open",()=>{$("roomCode").textContent=room;page("lobby")});peer.on("connection",c=>{conn=c;wire()});peer.on("error",()=>{$("msg").textContent="تعذر إنشاء الغرفة. جرّب مرة أخرى."})}
+function join(){me=$("name").value.trim();room=$("roomIn").value.trim().toUpperCase();if(!me||room.length<4)return $("msg").textContent="اكتب الاسم ورمز الغرفة.";isHost=false;peer=new Peer();peer.on("open",()=>{conn=peer.connect("arabic-categories-"+room,{reliable:true});wire()});peer.on("error",()=>$("msg").textContent="تعذر الاتصال.")}
+function wire(){conn.on("open",()=>{send("hello",{name:me});if(!isHost){$("roomCode").textContent=room;page("lobby")}});conn.on("data",m=>{if(m.type==="hello"){other=m.name;$("players").textContent=me+" × "+other;if(isHost)$("start").classList.remove("hidden")}if(m.type==="round"){rnd=m.rnd;L=m.L;reset();page("game")}if(m.type==="answers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="review"){otherAns=m.hostAnswers;valid=m.valid;render(false);page("review");$("guestWait").classList.remove("hidden")}if(m.type==="final"){total=m.myTotal;otherTotal=m.otherTotal;valid=m.valid;render(false);$("guestWait").classList.add("hidden");$("score").textContent=total}});conn.on("close",()=>alert("انقطع اتصال اللاعب الآخر."))}
+function newRound(){if(!isHost)return;rnd++;L=letters[Math.floor(Math.random()*letters.length)];send("round",{rnd,L});reset();page("game")}
+function reset(){myAns=otherAns=null;valid={};$("round").textContent=rnd;$("letter").textContent=L;$("score").textContent=total;$("fields").innerHTML=cats.map(c=>`<div class="field"><label>${c}</label><input data-c="${c}" autocomplete="off" autocorrect="off"></div>`).join("");$("done").disabled=false;$("wait").textContent="";$("next").classList.add("hidden");$("hostTools").classList.add("hidden");$("guestWait").classList.add("hidden")}
+function submit(){myAns={};document.querySelectorAll("[data-c]").forEach(i=>{myAns[i.dataset.c]=i.value.trim();i.disabled=true});$("done").disabled=true;$("wait").textContent="تم الإرسال. بانتظار اللاعب الآخر…";send("answers",{a:myAns});if(isHost&&otherAns)prepare()}
+function prepare(){cats.forEach(c=>valid[c]={me:begins(myAns[c]),other:begins(otherAns[c])});send("review",{hostAnswers:myAns,valid:Object.fromEntries(cats.map(c=>[c,{me:valid[c].other,other:valid[c].me}]))});render(true);page("review");$("hostTools").classList.remove("hidden")}
+function points(a,b,va,vb){if(!va)return 0;return vb&&norm(a)===norm(b)?5:10}
+function render(hostMode){let r="";cats.forEach(c=>{let a=myAns?.[c]||"",b=otherAns?.[c]||"",va=valid[c]?.me??begins(a),vb=valid[c]?.other??begins(b),p=points(a,b,va,vb);r+=`<tr><td>${c}</td><td>${a||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','me')">${va?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${b||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','other')">${vb?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${p}</td></tr>`});$("rows").innerHTML=r}
+function flip(c,w){valid[c][w]=!valid[c][w];render(true);$("hostTools").classList.remove("hidden")}
+function finalize(){let mine=0,theirs=0;cats.forEach(c=>{mine+=points(myAns[c],otherAns[c],valid[c].me,valid[c].other);theirs+=points(otherAns[c],myAns[c],valid[c].other,valid[c].me)});total+=mine;otherTotal+=theirs;send("final",{myTotal:otherTotal,otherTotal:total,valid:Object.fromEntries(cats.map(c=>[c,{me:valid[c].other,other:valid[c].me}]))});$("score").textContent=total;$("hostTools").classList.add("hidden");$("next").classList.remove("hidden");render(false)}
+</script></main></body></html>
