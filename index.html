@@ -51,10 +51,23 @@ function send(type,data={}){if(conn?.open)conn.send({type,...data})}
 function roomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
 function host(){me=$("name").value.trim();if(!me)return $("msg").textContent="اكتب اسمك.";isHost=true;room=roomCode();$("msg").textContent="جاري إنشاء الغرفة…";peer=new Peer("arabic-categories-"+room);peer.on("open",()=>{$("roomCode").textContent=room;page("lobby")});peer.on("connection",c=>{conn=c;wire()});peer.on("error",()=>{$("msg").textContent="تعذر إنشاء الغرفة. جرّب مرة أخرى."})}
 function join(){me=$("name").value.trim();room=$("roomIn").value.trim().toUpperCase();if(!me||room.length<4)return $("msg").textContent="اكتب الاسم ورمز الغرفة.";isHost=false;peer=new Peer();peer.on("open",()=>{conn=peer.connect("arabic-categories-"+room,{reliable:true});wire()});peer.on("error",()=>$("msg").textContent="تعذر الاتصال.")}
-function wire(){conn.on("open",()=>{send("hello",{name:me});if(!isHost){$("roomCode").textContent=room;page("lobby")}});conn.on("data",m=>{if(m.type==="hello"){other=m.name;$("players").textContent=me+" × "+other;if(isHost)$("start").classList.remove("hidden")}if(m.type==="round"){rnd=m.rnd;L=m.L;reset();page("game")}if(m.type==="answers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="review"){otherAns=m.hostAnswers;valid=m.valid;render(false);page("review");$("guestWait").classList.remove("hidden")}if(m.type==="final"){total=m.myTotal;otherTotal=m.otherTotal;valid=m.valid;render(false);$("guestWait").classList.add("hidden");$("score").textContent=total}});conn.on("close",()=>alert("انقطع اتصال اللاعب الآخر."))}
+function wire(){conn.on("open",()=>{send("hello",{name:me});if(!isHost){$("roomCode").textContent=room;page("lobby")}});conn.on("data",m=>{if(m.type==="hello"){other=m.name;$("players").textContent=me+" × "+other;if(isHost)$("start").classList.remove("hidden")}if(m.type==="round"){rnd=m.rnd;L=m.L;reset();page("game")}if(m.type==="answers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="stopRound"){otherAns=m.a;stopByOther(m)}if(m.type==="stoppedAnswers"){otherAns=m.a;if(isHost&&myAns)prepare();}if(m.type==="review"){otherAns=m.hostAnswers;valid=m.valid;render(false);page("review");$("guestWait").classList.remove("hidden")}if(m.type==="final"){total=m.myTotal;otherTotal=m.otherTotal;valid=m.valid;render(false);$("guestWait").classList.add("hidden");$("score").textContent=total}});conn.on("close",()=>alert("انقطع اتصال اللاعب الآخر."))}
 function newRound(){if(!isHost)return;rnd++;L=letters[Math.floor(Math.random()*letters.length)];send("round",{rnd,L});reset();page("game")}
 function reset(){myAns=otherAns=null;valid={};$("round").textContent=rnd;$("letter").textContent=L;$("score").textContent=total;$("fields").innerHTML=cats.map(c=>`<div class="field"><label>${c}</label><input data-c="${c}" autocomplete="off" autocorrect="off"></div>`).join("");$("done").disabled=false;$("wait").textContent="";$("next").classList.add("hidden");$("hostTools").classList.add("hidden");$("guestWait").classList.add("hidden")}
-function submit(){myAns={};document.querySelectorAll("[data-c]").forEach(i=>{myAns[i.dataset.c]=i.value.trim();i.disabled=true});$("done").disabled=true;$("wait").textContent="تم الإرسال. بانتظار اللاعب الآخر…";send("answers",{a:myAns});if(isHost&&otherAns)prepare()}
+function captureAnswers(){let a={};document.querySelectorAll("[data-c]").forEach(i=>{a[i.dataset.c]=i.value.trim();i.disabled=true});$("done").disabled=true;return a}
+function submit(){
+ myAns=captureAnswers();
+ $("wait").textContent="أنهيت أولًا — تم إيقاف الجولة عند اللاعب الآخر.";
+ send("stopRound",{by:me,a:myAns});
+ if(isHost&&otherAns)prepare();
+}
+function stopByOther(m){
+ if(myAns)return;
+ myAns=captureAnswers();
+ $("wait").textContent=`انتهت الجولة — ${m.by} ضغط «خلصت» أولًا.`;
+ send("stoppedAnswers",{a:myAns});
+ if(isHost){otherAns=m.a;prepare();}
+}
 function prepare(){cats.forEach(c=>valid[c]={me:begins(myAns[c]),other:begins(otherAns[c])});send("review",{hostAnswers:myAns,valid:Object.fromEntries(cats.map(c=>[c,{me:valid[c].other,other:valid[c].me}]))});render(true);page("review");$("hostTools").classList.remove("hidden")}
 function points(a,b,va,vb){if(!va)return 0;return vb&&norm(a)===norm(b)?5:10}
 function render(hostMode){let r="";cats.forEach(c=>{let a=myAns?.[c]||"",b=otherAns?.[c]||"",va=valid[c]?.me??begins(a),vb=valid[c]?.other??begins(b),p=points(a,b,va,vb);r+=`<tr><td>${c}</td><td>${a||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','me')">${va?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${b||"—"} ${hostMode?`<br><button class="judge" onclick="flip('${c}','other')">${vb?"صحيح ✓":"خطأ ✕"}</button>`:""}</td><td>${p}</td></tr>`});$("rows").innerHTML=r}
